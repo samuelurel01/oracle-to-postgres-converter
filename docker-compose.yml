@@ -1,0 +1,13 @@
+services:
+  converter:
+    build: .
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Se usar tnsnames.ora ou wallet Oracle, monte o diretório local
+    # e informe /opt/oracle/network/admin no campo "Diretório config/wallet".
+    volumes:
+      - ./logs:/app/logs
+    #   - ./oracle-network-admin:/opt/oracle/network/admin:ro
+    restart: unless-stopped
