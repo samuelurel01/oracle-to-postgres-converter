@@ -109,6 +109,10 @@ O arquivo é texto em formato JSON Lines. Cada linha contém tabela, coluna, mot
 
 O PostgreSQL não aceita `NUL (0x00)` em campos textuais. Se um campo textual Oracle vier com esse caractere, o conversor remove apenas o `NUL` e mantém o restante do texto. A linha também é registrada em `./logs/migration-problems.log` com evento `nul_byte_sanitized`.
 
+#### XML grande e `ORA-19011`
+
+Colunas Oracle `XMLTYPE` são lidas com `XMLSERIALIZE(... AS CLOB)` para evitar o erro `ORA-19011: Character string buffer too small`. Se ainda ocorrer erro durante a leitura de uma tabela, o conversor registra o SQL e a tabela em `./logs/migration-problems.log` com evento `oracle_fetch_error`.
+
 Se uma tabela já tiver sido criada em tentativa anterior com tipo diferente do esperado, execute novamente marcando `Apagar tabelas existentes`, porque `Limpar antes de inserir` remove dados, mas não altera tipos de coluna.
 
 #### Erro `DPY-4027: no configuration directory specified`

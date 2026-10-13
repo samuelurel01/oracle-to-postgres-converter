@@ -155,13 +155,22 @@ class OracleReader:
         owner = quote_oracle_identifier(table.owner)
         table_name = quote_oracle_identifier(table.name)
         columns = ", ".join(select_expression(column) for column in table.columns)
+        select_sql = f"select {columns} from {owner}.{table_name}"
 
         with self.connection.cursor() as cursor:
             cursor.arraysize = batch_size
-            cursor.execute(f"select {columns} from {owner}.{table_name}")
+            cursor.execute(select_sql)
 
             while True:
-                rows = cursor.fetchmany(batch_size)
+                try:
+                    rows = cursor.fetchmany(batch_size)
+                except Exception as error:
+                    self.problem_logger.log_oracle_fetch_error(
+                        table=table,
+                        sql=select_sql,
+                        error=error,
+                    )
+                    raise
                 if not rows:
                     break
                 yield [convert_oracle_row(table, row, self.problem_logger) for row in rows]
@@ -268,6 +277,9 @@ def select_expression(column: OracleColumn) -> str:
 
     if data_type.startswith("TIMESTAMP"):
         return f"to_char({column_name}, 'SYYYY-MM-DD HH24:MI:SS.FF9')"
+
+    if data_type == "XMLTYPE":
+        return f"xmlserialize(content {column_name} as clob)"
 
     return column_name
 

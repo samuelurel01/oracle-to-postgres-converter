@@ -71,6 +71,23 @@ class ProblemLogger:
             }
         )
 
+    def log_oracle_fetch_error(
+        self,
+        *,
+        table: OracleTable,
+        sql: str,
+        error: Exception,
+    ) -> None:
+        self._write(
+            {
+                "event": "oracle_fetch_error",
+                "timestamp": datetime.now().isoformat(timespec="seconds"),
+                "table": f"{table.owner}.{table.name}",
+                "error": str(error),
+                "sql": sql,
+            }
+        )
+
     def _write(self, event: dict[str, Any]) -> None:
         with self._lock:
             if not self._initialized:
